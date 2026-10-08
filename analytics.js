@@ -1,16 +1,45 @@
-// LCD Store — Analytics & QR Scan Tracking Engine
+// LCD Store — Analytics & QR Scan Tracking Engine (Cloud & Local)
 "use strict";
 
 (function() {
   const STORAGE_KEY = "lcd_store_analytics_v1";
 
-  // Parse UTM parameters
+  // Parse URL & UTM parameters
   const urlParams = new URLSearchParams(window.location.search);
   const utmSource = urlParams.get("utm_source") || urlParams.get("src") || urlParams.get("ref");
   const utmMedium = urlParams.get("utm_medium") || "web";
   const utmCampaign = urlParams.get("utm_campaign") || "organic";
 
-  const isQRScan = utmSource && utmSource.toLowerCase().includes("qr");
+  const isQRScan = Boolean(utmSource && utmSource.toLowerCase().includes("qr"));
+
+  // Identify current page
+  const pagePath = window.location.pathname.toLowerCase();
+  let pageName = "index";
+  if (pagePath.includes("gorras")) pageName = "gorras";
+  else if (pagePath.includes("perfumes")) pageName = "perfumes";
+
+  // Vercel Web Analytics Event Dispatcher
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+
+  if (isQRScan) {
+    try {
+      window.va('event', {
+        name: 'qr_scan',
+        data: {
+          campaign: utmSource,
+          medium: utmMedium,
+          page: pageName
+        }
+      });
+    } catch(e) {}
+  } else {
+    try {
+      window.va('event', {
+        name: 'page_view',
+        data: { page: pageName }
+      });
+    } catch(e) {}
+  }
 
   // Load existing local metrics
   function getStats() {
@@ -36,16 +65,9 @@
     } catch (e) {}
   }
 
-  // Record Current Visit
+  // Record Current Visit on this device
   const stats = getStats();
   stats.totalVisits = (stats.totalVisits || 0) + 1;
-
-  // Identify current page
-  const pagePath = window.location.pathname.toLowerCase();
-  let pageName = "index";
-  if (pagePath.includes("gorras")) pageName = "gorras";
-  else if (pagePath.includes("perfumes")) pageName = "perfumes";
-
   stats.pageViews[pageName] = (stats.pageViews[pageName] || 0) + 1;
 
   if (isQRScan) {
@@ -53,7 +75,6 @@
     const sourceKey = utmSource.toLowerCase();
     stats.qrBreakdown[sourceKey] = (stats.qrBreakdown[sourceKey] || 0) + 1;
 
-    // Save scan timestamp in history
     stats.history.unshift({
       type: "QR_SCAN",
       source: utmSource,
@@ -70,13 +91,15 @@
     });
   }
 
-  // Cap history to last 50 events
   if (stats.history.length > 50) stats.history = stats.history.slice(0, 50);
   saveStats(stats);
 
   // Global helper to track events
   window.LCD_TRACK = {
     whatsappClick: function(sourceLabel) {
+      try {
+        window.va('event', { name: 'whatsapp_click', data: { label: sourceLabel, page: pageName } });
+      } catch(e) {}
       const st = getStats();
       st.whatsappClicks = (st.whatsappClicks || 0) + 1;
       st.history.unshift({
@@ -89,6 +112,9 @@
       saveStats(st);
     },
     cartOpen: function() {
+      try {
+        window.va('event', { name: 'cart_open', data: { page: pageName } });
+      } catch(e) {}
       const st = getStats();
       st.cartOpens = (st.cartOpens || 0) + 1;
       saveStats(st);
