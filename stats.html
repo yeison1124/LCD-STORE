@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Estadísticas & Escaneos QR | LCD Store</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07080C;
+      --card-bg: rgba(18, 20, 29, 0.75);
+      --border: rgba(255, 255, 255, 0.08);
+      --gold: #D4AF37;
+      --gold-light: #F3E5AB;
+      --emerald: #10B981;
+      --purple: #8B5CF6;
+      --blue: #3B82F6;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 24px; }
+    
+    header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .logo-box { display: flex; align-items: center; gap: 12px; }
+    .logo-box img { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--gold); }
+    .brand-title { font-family: 'Cinzel', serif; font-size: 20px; color: var(--gold); letter-spacing: 1px; }
+    .brand-sub { font-size: 12px; color: var(--text-muted); }
+
+    .header-actions { display: flex; gap: 8px; }
+    .btn-action { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-action:hover { background: rgba(212,175,55,0.15); border-color: var(--gold); color: var(--gold-light); }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden; }
+    .metric-card::after { content:''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent, var(--gold)); }
+    .metric-title { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-val { font-size: 32px; font-weight: 800; color: #FFF; line-height: 1.1; }
+    .metric-sub { font-size: 12px; color: var(--text-muted); }
+
+    .section-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .section-head { font-size: 16px; font-weight: 700; color: var(--gold-light); display: flex; align-items: center; justify-content: space-between; }
+    
+    .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); }
+    .breakdown-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .breakdown-badge { font-size: 11px; background: rgba(212,175,55,0.15); color: var(--gold); padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+
+    .event-log { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+    .event-item { font-size: 12px; padding: 10px 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 3px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+
+    .banner-tip { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 16px; font-size: 13px; color: #D1FAE5; line-height: 1.5; }
+    .banner-tip strong { color: #34D399; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-box">
+        <img src="./logo.png" alt="LCD Store">
+        <div>
+          <div class="brand-title">LCD STORE</div>
+          <div class="brand-sub">Panel de Métricas en Tiempo Real</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="btn-action" href="./qr_kit.html">📥 Descargar QRs</a>
+        <a class="btn-action" href="./index.html">🏠 Ver Tienda</a>
+        <button class="btn-action" onclick="resetMetrics()">🔄 Reiniciar</button>
+      </div>
+    </header>
+
+    <div class="banner-tip">
+      <strong>💡 ¿Cómo se registran los datos?</strong><br>
+      Cada vez que una persona escanea cualquiera de tus códigos QR físicos (volantes, empaques, tarjetas) o entra a <a href="https://lcd-store.vercel.app/" target="_blank" style="color:#6EE7B7;font-weight:700;">lcd-store.vercel.app</a>, este panel registra la interacción instantáneamente. También puedes ver analíticas globales en tu panel de Vercel.
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card" style="--accent: var(--gold);">
+        <span class="metric-title">📱 Escaneos de QR</span>
+        <span class="metric-val" id="valQRScans">0</span>
+        <span class="metric-sub">Usuarios desde publicidad física</span>
+      </div>
+
+      <div class="metric-card" style="--accent: var(--blue);">
+        <span class="metric-title">👁️ Visitas Totales</span>
+        <span class="metric-val" id="valTotalVisits">0</span>
+        <span class="metric-sub">Páginas vistas acumuladas</span>
+      </div>
+
+      <div class="metric-card" style="--accent: var(--emerald);">
+        <span class="metric-title">💬 Clics a WhatsApp</span>
+        <span class="metric-val" id="valWaClicks">0</span>
+        <span class="metric-sub">Clientes que abrieron chat</span>
+      </div>
+
+      <div class="metric-card" style="--accent: var(--purple);">
+        <span class="metric-title">🛒 Carrito Abierto</span>
+        <span class="metric-val" id="valCartOpens">0</span>
+        <span class="metric-sub">Intenciones de compra</span>
+      </div>
+    </div>
+
+    <!-- Breakdown of QR campaigns -->
+    <div class="section-card">
+      <div class="section-head">
+        <span>📊 Desglose por Tipo de Publicidad QR</span>
+      </div>
+      <div id="qrList" style="display:flex;flex-direction:column;gap:10px;">
+        <!-- Injected by script -->
+      </div>
+    </div>
+
+    <!-- Page views breakdown -->
+    <div class="section-card">
+      <div class="section-head">
+        <span>📄 Vistas por Sección</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
+        <div class="breakdown-row">
+          <span class="breakdown-name">🏠 Bio-link / Inicio:</span>
+          <span class="breakdown-badge" id="viewIndex">0 vistas</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-name">🧢 Catálogo Gorras:</span>
+          <span class="breakdown-badge" id="viewGorras">0 vistas</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-name">💎 Catálogo Perfumes:</span>
+          <span class="breakdown-badge" id="viewPerfumes">0 vistas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time activity log -->
+    <div class="section-card">
+      <div class="section-head">
+        <span>⚡ Registro de Actividad Reciente</span>
+        <span style="font-size:12px;color:var(--text-muted);">Últimos eventos</span>
+      </div>
+      <div class="event-log" id="eventLog">
+        <!-- Injected by script -->
+      </div>
+    </div>
+  </div>
+
+  <script src="./analytics.js"></script>
+  <script>
+    function renderStats() {
+      const data = window.LCD_TRACK.getReport();
+      document.getElementById('valQRScans').innerText = data.totalQRScans || 0;
+      document.getElementById('valTotalVisits').innerText = data.totalVisits || 0;
+      document.getElementById('valWaClicks').innerText = data.whatsappClicks || 0;
+      document.getElementById('valCartOpens').innerText = data.cartOpens || 0;
+
+      document.getElementById('viewIndex').innerText = (data.pageViews.index || 0) + ' vistas';
+      document.getElementById('viewGorras').innerText = (data.pageViews.gorras || 0) + ' vistas';
+      document.getElementById('viewPerfumes').innerText = (data.pageViews.perfumes || 0) + ' vistas';
+
+      // Render QR Breakdown
+      const qrList = document.getElementById('qrList');
+      qrList.innerHTML = '';
+      const breakdown = data.qrBreakdown || {};
+      const labels = {
+        "qr_publicidad": "📄 Volantes y Afiches (Publicidad en Calle)",
+        "qr_empaque": "🛍️ Bolsas y Empaques de Entregas",
+        "qr_tarjetas": "💳 Tarjetas de Presentación",
+        "qr_promo": "✨ Promociones Especiales"
+      };
+
+      const keys = Object.keys(breakdown);
+      if (keys.length === 0) {
+        qrList.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px;">Aún no se han registrado escaneos de QR. ¡Escanea uno de prueba para verlo aquí!</div>';
+      } else {
+        keys.forEach(k => {
+          const title = labels[k] || (`🏷️ QR Origen: ` + k);
+          const count = breakdown[k];
+          qrList.innerHTML += `
+            <div class="breakdown-row">
+              <span class="breakdown-name">${title}</span>
+              <span class="breakdown-badge">${count} escaneo(s)</span>
+            </div>
+          `;
+        });
+      }
+
+      // Render Event Log
+      const eventLog = document.getElementById('eventLog');
+      eventLog.innerHTML = '';
+      if (!data.history || data.history.length === 0) {
+        eventLog.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px;">Sin eventos registrados aún.</div>';
+      } else {
+        data.history.forEach(item => {
+          const date = new Date(item.timestamp).toLocaleTimeString();
+          let desc = '';
+          if (item.type === 'QR_SCAN') desc = `📱 <strong>Escaneo de QR:</strong> Campaña <code>${item.source}</code> (Página: ${item.page})`;
+          else if (item.type === 'WA_CLICK') desc = `💬 <strong>Clic a WhatsApp:</strong> ${item.label}`;
+          else desc = `👁️ <strong>Visita Directa</strong> a página <code>${item.page}</code>`;
+          
+          eventLog.innerHTML += `
+            <div class="event-item">
+              <span>${desc}</span>
+              <span style="color:var(--text-muted);font-size:11px;">${date}</span>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function resetMetrics() {
+      if (confirm("¿Estás seguro de que deseas reiniciar las estadísticas a 0?")) {
+        window.LCD_TRACK.resetStats();
+      }
+    }
+
+    renderStats();
+  </script>
+</body>
+</html>
